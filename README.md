@@ -85,8 +85,8 @@ Para lograr esto, se sabe que es necesario desacoplar toda la lógica del juego 
 1. Clone el presente proyecto en su equipo de trabajo (comando git clone).
 2. Pruebe su funcionamiento ejecutando la fase de compilación del proyecto Maven (mvn compile), y luego el plugin ‘exec’:
 
-	```bash
-		mvn exec:java -Dexec.mainClass="com.balitechy.spacewar.main.Game"
+```bash
+	mvn exec:java -Dexec.mainClass="com.balitechy.spacewar.main.Game"
 ```
 
 3. Importe el proyecto en NetBeans, inspeccione el código, e identifique cómo funciona la aplicación. Plantee en un diagrama de clases la solución aplicando el patrón fábrica abstracta.
