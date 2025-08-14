@@ -14,4 +14,4 @@ Un juego de naves espaciales que demuestra la implementación del **Patrón Abst
 - 
 ## Ejecución
 
-cd DYAS-GoF-CreationalPatterns-GameRefactoring
+mvn exec:java -Dexec.mainClass="com.balitechy.spacewar.main.Game"
