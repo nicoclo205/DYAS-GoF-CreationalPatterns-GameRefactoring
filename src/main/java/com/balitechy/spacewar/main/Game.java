@@ -5,10 +5,15 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.swing.JFrame;
+
+// Nuevas importaciones para Abstract Factory
+import com.balitechy.spacewar.main.abstractions.AbstractPlayer;
+import com.balitechy.spacewar.main.abstractions.AbstractBackgroundRenderer;
+import com.balitechy.spacewar.main.factories.GameElementsFactory;
+import com.balitechy.spacewar.main.factories.FactoryProducer;
 
 public class Game extends Canvas implements Runnable {
 
@@ -16,24 +21,20 @@ public class Game extends Canvas implements Runnable {
 	public static final int WIDTH = 320;
 	public static final int HEIGHT = WIDTH / 12 * 9;
 	public static final int SCALE = 2;
-	public final String TITLE = "Space War 2D";
+	public final String TITLE = "Space War 2D - Abstract Factory Pattern";
 	
 	private boolean running = false;
 	private Thread thread;
-	private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
-	
-	
 	private SpritesImageLoader sprites;
 	
-	//Game components
-	private Player player;
-	private BulletController bullets;
-	private BackgroundRenderer backgRenderer;
-	
+	// Game components - now using abstractions
+	private GameElementsFactory elementsFactory;
+	private AbstractPlayer player;
+	private RefactoredBulletController bullets;
+	private AbstractBackgroundRenderer backgRenderer;
 	
 	public void init(){
 		requestFocus();
-		
 		
 		sprites = new SpritesImageLoader("/sprites.png");
 		try {			
@@ -45,20 +46,23 @@ public class Game extends Canvas implements Runnable {
 		// Add keyboard listener
 		addKeyListener(new InputHandler(this));
 		
-		// Initialize game components.
+		// Get factory based on current configuration
+		elementsFactory = FactoryProducer.getFactory();
 		
+		// Initialize game components using factory
+		player = elementsFactory.createPlayer((WIDTH * SCALE - AbstractPlayer.WIDTH) / 2, 
+											 HEIGHT * SCALE - 50, this);
+		bullets = new RefactoredBulletController(elementsFactory);
+		backgRenderer = elementsFactory.createBackgroundRenderer();
 		
-		// Set player position at the bottom center.
-		player = new Player((WIDTH * SCALE - Player.WIDTH) / 2, HEIGHT * SCALE - 50 , this);
-		bullets = new BulletController();
-		backgRenderer=new BackgroundRenderer();
+		System.out.println("Game initialized with style: " + FactoryProducer.getCurrentStyle());
 	}
 
 	public SpritesImageLoader getSprites(){
 		return sprites;
 	}
 	
-	public BulletController getBullets(){
+	public RefactoredBulletController getBullets(){
 		return bullets;
 	}
 	
@@ -83,7 +87,20 @@ public class Game extends Canvas implements Runnable {
 			break;
 			
 			case KeyEvent.VK_SPACE:
-				player.shoot();
+				shoot();
+			break;
+			
+			// Style switching keys for demonstration
+			case KeyEvent.VK_1:
+				switchStyle(FactoryProducer.SPRITE_STYLE);
+			break;
+			
+			case KeyEvent.VK_2:
+				switchStyle(FactoryProducer.VECTORIAL_STYLE);
+			break;
+			
+			case KeyEvent.VK_3:
+				switchStyle(FactoryProducer.COLORFUL_VECTORIAL_STYLE);
 			break;
 		}
 	}
@@ -107,8 +124,18 @@ public class Game extends Canvas implements Runnable {
 			case KeyEvent.VK_DOWN:
 				player.setVelY(0);
 			break;
-			
 		}
+	}
+	
+	private void switchStyle(String newStyle) {
+		FactoryProducer.setCurrentStyle(newStyle);
+		init(); // Reinitialize with new style
+		System.out.println("Switched to style: " + newStyle);
+	}
+	
+	private void shoot() {
+		bullets.addBullet(player.getX() + (AbstractPlayer.WIDTH/2) - 5, 
+						 player.getY() - 18, this);
 	}
 	
 	private synchronized void start(){
@@ -160,7 +187,7 @@ public class Game extends Canvas implements Runnable {
 			
 			if(System.currentTimeMillis() - timer > 1000){
 				timer += 1000;
-				System.out.println(updates + "ticks, fps " + frames);
+				System.out.println(updates + " ticks, fps " + frames + " - Style: " + FactoryProducer.getCurrentStyle());
 				updates = 0;
 				frames = 0;
 			}
@@ -198,15 +225,16 @@ public class Game extends Canvas implements Runnable {
 			e.printStackTrace();
 		}
 		
-		
-		
-		
 		////////////////////////////////
 		g.dispose();
 		bs.show();
 	}
 	
-	public static void main(String args[]){		
+	public static void main(String args[]){
+		// Set initial style via system property or default
+		String initialStyle = System.getProperty("game.style", FactoryProducer.SPRITE_STYLE);
+		FactoryProducer.setCurrentStyle(initialStyle);
+		
 		Game game = new Game();
 		game.setPreferredSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
 		game.setMaximumSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
@@ -220,7 +248,12 @@ public class Game extends Canvas implements Runnable {
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		
+		System.out.println("=== Space War 2D - Abstract Factory Pattern Demo ===");
+		System.out.println("Press 1 for Sprite style");
+		System.out.println("Press 2 for Vectorial style");
+		System.out.println("Press 3 for Colorful Vectorial style");
+		System.out.println("Use arrow keys to move, SPACE to shoot");
+		
 		game.start();
 	}
-	
 }

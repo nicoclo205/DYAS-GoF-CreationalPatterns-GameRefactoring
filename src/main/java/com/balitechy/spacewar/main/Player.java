@@ -52,8 +52,7 @@ public class Player {
 	}
 	
 	public void shoot(){
-		Bullet b = new Bullet(x+(WIDTH/2)-5, y-18, game);
-		game.getBullets().addBullet(b);
+		game.getBullets().addBullet(velX, velY, game);
 	}
 
 	public void tick(){
